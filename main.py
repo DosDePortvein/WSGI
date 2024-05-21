@@ -4,6 +4,7 @@ import json
 import pytz
 from datetime import datetime
 from pytz.exceptions import UnknownTimeZoneError
+from dateutil import parser
 
 
 def get_time_from_tz_name(environ, response, headers):
@@ -50,7 +51,7 @@ def convert(environ, response, headers):
     try:
         json_from_body = json.loads(request_body)
         input_tz = pytz.timezone(json_from_body['tz'])
-        input_time = datetime.strptime(json_from_body['date'], '%m.%d.%Y %H:%M:%S').replace(tzinfo=input_tz)
+        input_time = parser.parse(json_from_body['date']).replace(tzinfo=input_tz)
         result = target_tz.normalize(input_time.astimezone(target_tz))
         response("200 OK", headers)
         return result.strftime('%m.%d.%Y %H:%M:%S').encode('utf-8')
@@ -78,8 +79,8 @@ def datediff(environ, response, headers):
         json_from_body = json.loads(request_body)
         first_tz = pytz.timezone(json_from_body['first_tz'])
         second_tz = pytz.timezone(json_from_body['second_tz'])
-        first_date = datetime.strptime(json_from_body['first_date'], '%m.%d.%Y %H:%M:%S').replace(tzinfo=first_tz)
-        second_date = datetime.strptime(json_from_body['second_date'], '%H:%M%p %Y-%m-%d').replace(tzinfo=second_tz)
+        first_date = parser.parse(json_from_body['first_date']).replace(tzinfo=first_tz)
+        second_date = parser.parse(json_from_body['second_date']).replace(tzinfo=second_tz)
         if first_date > second_date:
             result = str((first_date - second_date).total_seconds())
             response("200 OK", headers)
